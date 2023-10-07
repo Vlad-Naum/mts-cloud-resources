@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: runner
+  jackson:
+    default-property-inclusion: non_null
+  main:
+    banner-mode: off
+
+logging:
+  level:
+    com:
+      mts:
+        cloud: ${LOGGER:DEBUG}
+
+application:
+  base-url: ${BASE_URL:https://mts-olimp-cloud.codenrock.com/api}
+  token: ${TOKEN:W97aYJSqcL629F83y6eBSlT4gipHLKdV}
