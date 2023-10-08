@@ -2,7 +2,7 @@ package com.mts.cloud.service.resource;
 
 import com.mts.cloud.configuration.ResourceType;
 
-public record GetResource(int id,
+public record GetResource(long id,
                           int cost,
                           int cpu,
                           float cpuLoad,

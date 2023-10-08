@@ -1,7 +1,6 @@
 package com.mts.cloud.service.price;
 
 import com.mts.cloud.configuration.ResourceType;
-import com.mts.cloud.service.resource.ResourceClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,8 +18,6 @@ public class PriceClient implements InitializingBean {
 
     @Autowired
     public WebClient webClient;
-    @Autowired
-    public ResourceClient resourceClient;
 
     public void getPrices() {
         Price[] prices = webClient.get()
