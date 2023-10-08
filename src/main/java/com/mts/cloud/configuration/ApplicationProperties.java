@@ -5,5 +5,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @ConfigurationProperties(prefix = "application")
 @EnableScheduling
-public record ApplicationProperties(String baseUrl, String token) {
+public record ApplicationProperties(String baseUrl, String token, int minVm, int minDb) {
 }

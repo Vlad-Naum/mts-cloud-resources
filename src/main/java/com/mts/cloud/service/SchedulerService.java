@@ -3,6 +3,7 @@ package com.mts.cloud.service;
 import com.mts.cloud.configuration.ResourceType;
 import com.mts.cloud.service.price.Price;
 import com.mts.cloud.service.price.PriceClient;
+import com.mts.cloud.service.resource.GetResource;
 import com.mts.cloud.service.resource.ResourceService;
 import com.mts.cloud.service.statistic.Statistic;
 import com.mts.cloud.service.statistic.StatisticClient;
@@ -13,6 +14,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -21,7 +23,8 @@ public class SchedulerService {
     private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
 
     public static final int MAX_LOAD = 85;
-    public static final int MIN_LOAD = 20;
+    public static final int MIN_LOAD = 50;
+    public static final int OPTIMAL_LOAD = 60;
 
     @Autowired
     public StatisticClient statisticClient;
@@ -33,37 +36,92 @@ public class SchedulerService {
     @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS, initialDelay = 0)
     public void task() {
         Statistic statistic = statisticClient.get();
-        calculateDb(statistic);
-        calculateVm(statistic);
+        List<GetResource> resources = resourceService.get();
+        calculateDb(statistic, resources);
+        calculateVm(statistic, resources);
     }
 
-    private void calculateDb(Statistic statistic) {
+    private void calculateDb(Statistic statistic, List<GetResource> resources) {
         double dbCpuLoad = statistic.dbCpuLoad();
         double dbRamLoad = statistic.dbRamLoad();
         log.debug("db_cpu_load = {}  db_ram_load = {}", dbCpuLoad, dbRamLoad);
+        boolean isFailed = resources.stream()
+                .anyMatch(resource -> resource.type().equals(ResourceType.DB) && resource.failed());
+        if (isFailed) {
+            return;
+        }
         if (dbCpuLoad >= MAX_LOAD || dbRamLoad >= MAX_LOAD) {
             Price price = priceClient.prices.get(ResourceType.DB)
                     .stream()
                     .max(Comparator.comparingInt(Price::cpu))
                     .get();
-            resourceService.add(price);
+            GetResource getResource = resources.stream()
+                    .filter(r -> r.type().equals(ResourceType.DB))
+                    .min(Comparator.comparingInt(GetResource::ram))
+                    .orElse(null);
+            if (getResource == null) {
+                resourceService.add(price);
+            } else {
+                resourceService.update(getResource.id(), price);
+            }
         } else if (dbRamLoad <= MIN_LOAD) {
             resourceService.delete(ResourceType.DB);
+        } else if (dbRamLoad < OPTIMAL_LOAD) {
+            GetResource getResource = resources.stream()
+                    .filter(r -> r.type().equals(ResourceType.DB))
+                    .max(Comparator.comparingInt(GetResource::ram))
+                    .orElse(null);
+            if (getResource == null) {
+                resourceService.delete(ResourceType.DB);
+            } else {
+                Price price = priceClient.prices.get(ResourceType.DB)
+                        .stream()
+                        .min(Comparator.comparingInt(Price::cpu))
+                        .get();
+                resourceService.update(getResource.id(), price);
+            }
         }
     }
 
-    private void calculateVm(Statistic statistic) {
+    private void calculateVm(Statistic statistic, List<GetResource> resources) {
         double vmCpuLoad = statistic.vmCpuLoad();
         double vmRamLoad = statistic.vmRamLoad();
         log.debug("vm_cpu_load = {}  vm_ram_load = {}", vmCpuLoad, vmRamLoad);
+        boolean isFailed = resources.stream()
+                .anyMatch(resource -> resource.type().equals(ResourceType.VM) && resource.failed());
+        if (isFailed) {
+            return;
+        }
         if (vmCpuLoad >= MAX_LOAD || vmRamLoad >= MAX_LOAD) {
             Price price = priceClient.prices.get(ResourceType.VM)
                     .stream()
                     .max(Comparator.comparingInt(Price::cpu))
                     .get();
-            resourceService.add(price);
+            GetResource getResource = resources.stream()
+                    .filter(r -> r.type().equals(ResourceType.VM))
+                    .min(Comparator.comparingInt(GetResource::ram))
+                    .orElse(null);
+            if (getResource == null) {
+                resourceService.add(price);
+            } else {
+                resourceService.update(getResource.id(), price);
+            }
         } else if (vmRamLoad <= MIN_LOAD) {
-            resourceService.delete(ResourceType.DB);
+            resourceService.delete(ResourceType.VM);
+        } else if (vmRamLoad < OPTIMAL_LOAD) {
+            GetResource getResource = resources.stream()
+                    .filter(r -> r.type().equals(ResourceType.VM))
+                    .max(Comparator.comparingInt(GetResource::ram))
+                    .orElse(null);
+            if (getResource == null) {
+                resourceService.delete(ResourceType.VM);
+            } else {
+                Price price = priceClient.prices.get(ResourceType.VM)
+                        .stream()
+                        .min(Comparator.comparingInt(Price::cpu))
+                        .get();
+                resourceService.update(getResource.id(), price);
+            }
         }
     }
 }

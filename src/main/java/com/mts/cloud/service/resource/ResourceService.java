@@ -22,6 +22,10 @@ public class ResourceService {
         resourceClient.post(new PostResource(price.cpu(), price.ram(), price.type()));
     }
 
+    public void update(long id, Price price) {
+        resourceClient.put(id, new PutResource(price.cpu(), price.ram(), price.type()));
+    }
+
     public void delete(ResourceType type) {
         List<GetResource> getResources = resourceClient.get();
         GetResource getResource = getResources.stream()
@@ -32,5 +36,9 @@ public class ResourceService {
             return;
         }
         resourceClient.delete(getResource.id());
+    }
+
+    public void delete(long id) {
+        resourceClient.delete(id);
     }
 }

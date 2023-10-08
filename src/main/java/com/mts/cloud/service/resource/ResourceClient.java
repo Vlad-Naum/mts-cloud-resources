@@ -54,8 +54,22 @@ public class ResourceClient {
         log.debug("post resource type: {}, statusCode: {}", postResource.type(), statusCode);
     }
 
+    public void put(long id, PutResource putResource) {
+        ResponseEntity<Void> bodilessEntity = webClient.put()
+                .uri(uriBuilder -> uriBuilder
+                        .path(RESOURCE_PATH + "/{id}")
+                        .queryParam(CloudApplicationConst.TOKEN, applicationProperties.token())
+                        .build(id))
+                .bodyValue(putResource)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+        HttpStatusCode statusCode = bodilessEntity.getStatusCode();
+        log.debug("put resource type: {}, statusCode: {}", putResource.type(), statusCode);
+    }
+
     public void delete(long id) {
-        ResponseEntity<Void> block = webClient.post()
+        ResponseEntity<Void> block = webClient.delete()
                 .uri(uriBuilder -> uriBuilder
                         .path(RESOURCE_PATH + "/{id}")
                         .queryParam(CloudApplicationConst.TOKEN, applicationProperties.token())
