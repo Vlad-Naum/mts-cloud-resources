@@ -15,3 +15,5 @@ logging:
 application:
   base-url: ${BASE_URL:https://mts-olimp-cloud.codenrock.com/api}
   token: ${TOKEN:W97aYJSqcL629F83y6eBSlT4gipHLKdV}
+  minVm: ${MIN_VM:15}
+  minDb: ${MIN_DB:5}
