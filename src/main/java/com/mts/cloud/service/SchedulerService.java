@@ -45,18 +45,28 @@ public class SchedulerService {
         double dbCpuLoad = statistic.dbCpuLoad();
         double dbRamLoad = statistic.dbRamLoad();
         log.debug("db_cpu_load = {}  db_ram_load = {}", dbCpuLoad, dbRamLoad);
-        boolean isFailed = resources.stream()
-                .anyMatch(resource -> resource.type().equals(ResourceType.DB) && resource.failed());
+        List<GetResource> listDb = resources.stream()
+                .filter(r -> r.type().equals(ResourceType.DB))
+                .toList();
+        List<Price> pricesDb = priceClient.prices.get(ResourceType.DB);
+        boolean isFailed = listDb.stream()
+                .anyMatch(GetResource::failed);
         if (isFailed) {
             return;
         }
-        if (dbCpuLoad >= MAX_LOAD || dbRamLoad >= MAX_LOAD) {
-            Price price = priceClient.prices.get(ResourceType.DB)
+        if (dbRamLoad == 0) {
+            Price price = pricesDb
                     .stream()
                     .max(Comparator.comparingInt(Price::cpu))
                     .get();
-            GetResource getResource = resources.stream()
-                    .filter(r -> r.type().equals(ResourceType.DB))
+            resourceService.add(price);
+        }
+        if (dbCpuLoad >= MAX_LOAD || dbRamLoad >= MAX_LOAD) {
+            Price price = pricesDb
+                    .stream()
+                    .max(Comparator.comparingInt(Price::cpu))
+                    .get();
+            GetResource getResource = listDb.stream()
                     .min(Comparator.comparingInt(GetResource::ram))
                     .orElse(null);
             if (getResource == null) {
@@ -65,16 +75,23 @@ public class SchedulerService {
                 resourceService.update(getResource.id(), price);
             }
         } else if (dbRamLoad <= MIN_LOAD) {
-            resourceService.delete(ResourceType.DB);
+            if (listDb.size() == 1) {
+                Price price = pricesDb
+                        .stream()
+                        .max(Comparator.comparingInt(Price::cpu))
+                        .get();
+                resourceService.update(listDb.get(0).id(), price);
+            } else {
+                resourceService.delete(ResourceType.DB);
+            }
         } else if (dbRamLoad < OPTIMAL_LOAD) {
-            GetResource getResource = resources.stream()
-                    .filter(r -> r.type().equals(ResourceType.DB))
+            GetResource getResource = listDb.stream()
                     .max(Comparator.comparingInt(GetResource::ram))
                     .orElse(null);
             if (getResource == null) {
                 resourceService.delete(ResourceType.DB);
             } else {
-                Price price = priceClient.prices.get(ResourceType.DB)
+                Price price = pricesDb
                         .stream()
                         .min(Comparator.comparingInt(Price::cpu))
                         .get();
@@ -87,18 +104,27 @@ public class SchedulerService {
         double vmCpuLoad = statistic.vmCpuLoad();
         double vmRamLoad = statistic.vmRamLoad();
         log.debug("vm_cpu_load = {}  vm_ram_load = {}", vmCpuLoad, vmRamLoad);
-        boolean isFailed = resources.stream()
-                .anyMatch(resource -> resource.type().equals(ResourceType.VM) && resource.failed());
+        List<GetResource> listVm = resources.stream()
+                .filter(r -> r.type().equals(ResourceType.VM))
+                .toList();
+        boolean isFailed = listVm.stream()
+                .anyMatch(GetResource::failed);
         if (isFailed) {
             return;
+        }
+        if (vmRamLoad == 0) {
+            Price price = priceClient.prices.get(ResourceType.VM)
+                    .stream()
+                    .max(Comparator.comparingInt(Price::cpu))
+                    .get();
+            resourceService.add(price);
         }
         if (vmCpuLoad >= MAX_LOAD || vmRamLoad >= MAX_LOAD) {
             Price price = priceClient.prices.get(ResourceType.VM)
                     .stream()
                     .max(Comparator.comparingInt(Price::cpu))
                     .get();
-            GetResource getResource = resources.stream()
-                    .filter(r -> r.type().equals(ResourceType.VM))
+            GetResource getResource = listVm.stream()
                     .min(Comparator.comparingInt(GetResource::ram))
                     .orElse(null);
             if (getResource == null) {
@@ -107,10 +133,16 @@ public class SchedulerService {
                 resourceService.update(getResource.id(), price);
             }
         } else if (vmRamLoad <= MIN_LOAD) {
+            if (listVm.size() == 1) {
+                Price price = priceClient.prices.get(ResourceType.VM)
+                        .stream()
+                        .max(Comparator.comparingInt(Price::cpu))
+                        .get();
+                resourceService.update(listVm.get(0).id(), price);
+            }
             resourceService.delete(ResourceType.VM);
         } else if (vmRamLoad < OPTIMAL_LOAD) {
-            GetResource getResource = resources.stream()
-                    .filter(r -> r.type().equals(ResourceType.VM))
+            GetResource getResource = listVm.stream()
                     .max(Comparator.comparingInt(GetResource::ram))
                     .orElse(null);
             if (getResource == null) {
