@@ -10,7 +10,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -30,17 +29,11 @@ public class PreInstalledService implements InitializingBean {
         resources.forEach(resource -> resourceService.delete(resource.id()));
 
         int minVm = applicationProperties.minVm();
-        Price priceVm = priceClient.prices.get(ResourceType.VM)
-                .stream()
-                .max(Comparator.comparingInt(Price::cpu))
-                .get();
+        Price priceVm = priceClient.getMax(ResourceType.VM);
         IntStream.range(0, minVm).forEach(value -> resourceService.add(priceVm));
 
         int minDb = applicationProperties.minDb();
-        Price priceDb = priceClient.prices.get(ResourceType.DB)
-                .stream()
-                .max(Comparator.comparingInt(Price::cpu))
-                .get();
+        Price priceDb = priceClient.getMax(ResourceType.DB);
         IntStream.range(0, minDb).forEach(value -> resourceService.add(priceDb));
     }
 }

@@ -16,6 +16,11 @@ public class PriceClient implements InitializingBean {
 
     public Map<ResourceType, List<Price>> prices;
 
+    private Price minDb;
+    private Price maxDb;
+    private Price minVm;
+    private Price maxVm;
+
     @Autowired
     public WebClient webClient;
 
@@ -32,8 +37,34 @@ public class PriceClient implements InitializingBean {
                 .collect(Collectors.groupingBy(Price::type));
     }
 
+    public Price getMin(ResourceType type) {
+        return switch (type) {
+            case DB -> minDb;
+            case VM -> minVm;
+        };
+    }
+
+    public Price getMax(ResourceType type) {
+        return switch (type) {
+            case DB -> maxDb;
+            case VM -> maxVm;
+        };
+    }
+
     @Override
     public void afterPropertiesSet() throws Exception {
         getPrices();
+        this.minDb = prices.get(ResourceType.DB).stream()
+                .min(Comparator.comparingInt(Price::cpu))
+                .get();
+        this.minVm = prices.get(ResourceType.VM).stream()
+                .min(Comparator.comparingInt(Price::cpu))
+                .get();
+        this.maxDb = prices.get(ResourceType.DB).stream()
+                .max(Comparator.comparingInt(Price::cpu))
+                .get();
+        this.maxVm = prices.get(ResourceType.VM).stream()
+                .max(Comparator.comparingInt(Price::cpu))
+                .get();
     }
 }
