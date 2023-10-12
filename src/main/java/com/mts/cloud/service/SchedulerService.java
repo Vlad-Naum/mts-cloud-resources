@@ -57,8 +57,7 @@ public class SchedulerService {
         if (dbRamLoad == 0) {
             Price price = priceClient.getMax(ResourceType.DB);
             resourceService.add(price);
-        }
-        if (dbCpuLoad >= MAX_LOAD || dbRamLoad >= MAX_LOAD) {
+        } else if (dbCpuLoad >= MAX_LOAD || dbRamLoad >= MAX_LOAD) {
             Price price = priceClient.getMax(ResourceType.DB);
             GetResource getResource = getMin(listDb);
             if (getResource == null) {
@@ -66,7 +65,7 @@ public class SchedulerService {
             } else {
                 resourceService.update(getResource.id(), price);
             }
-        } else if (dbRamLoad <= MIN_DB_LOAD) {
+        } else if (dbRamLoad <= MIN_DB_LOAD && !listDb.isEmpty()) {
             if (listDb.size() == 1) {
                 Price price = priceClient.getMax(ResourceType.DB);
                 resourceService.update(listDb.get(0).id(), price);
@@ -99,8 +98,7 @@ public class SchedulerService {
         if (vmRamLoad == 0) {
             Price price = priceClient.getMax(ResourceType.VM);
             resourceService.add(price);
-        }
-        if (vmCpuLoad >= MAX_LOAD || vmRamLoad >= MAX_LOAD) {
+        } else if (vmCpuLoad >= MAX_LOAD || vmRamLoad >= MAX_LOAD) {
             Price price = priceClient.getMax(ResourceType.VM);
             GetResource getResource = getMin(listVm);
             if (getResource == null) {
@@ -108,7 +106,7 @@ public class SchedulerService {
             } else {
                 resourceService.update(getResource.id(), price);
             }
-        } else if (vmRamLoad <= MIN_VM_LOAD) {
+        } else if (vmRamLoad <= MIN_VM_LOAD && !listVm.isEmpty()) {
             if (listVm.size() == 1) {
                 Price price = priceClient.getMax(ResourceType.VM);
                 resourceService.update(listVm.get(0).id(), price);
