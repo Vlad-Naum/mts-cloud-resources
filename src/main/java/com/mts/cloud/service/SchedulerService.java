@@ -64,7 +64,7 @@ public class SchedulerService {
             resourceService.add(price);
             return;
         }
-        if (dbRamLoad < MIN_OPTIMAL_LOAD || dbRamLoad > MAX_OPTIMAL_LOAD) {
+        if ((dbRamLoad < MIN_OPTIMAL_LOAD || dbRamLoad > MAX_OPTIMAL_LOAD) && dbRamLoad != 0) {
             int dbRam = listDb.stream().mapToInt(GetResource::ram).sum();
             if (dbRam < optimalDb) {
                 int count = optimalDb - dbRam;
@@ -117,7 +117,7 @@ public class SchedulerService {
             resourceService.add(price);
             return;
         }
-        if (vmRamLoad < MIN_OPTIMAL_LOAD || vmRamLoad > MAX_OPTIMAL_LOAD) {
+        if ((vmRamLoad < MIN_OPTIMAL_LOAD || vmRamLoad > MAX_OPTIMAL_LOAD) && vmRamLoad != 0) {
             int vmRam = listVm.stream().mapToInt(GetResource::ram).sum();
             if (vmRam < optimalVm) {
                 int count = optimalVm - vmRam;
