@@ -33,10 +33,15 @@ public class StatisticClient {
         if (mapStatistic == null || mapStatistic.isEmpty()) {
             return null;
         }
-        return new Statistic((Double) mapStatistic.get(DB_CPU_LOAD),
+        return new Statistic((Integer) mapStatistic.get(DB_CPU),
+                (Double) mapStatistic.get(DB_CPU_LOAD),
+                (Integer) mapStatistic.get(DB_RAM),
                 (Double) mapStatistic.get(DB_RAM_LOAD),
                 (Integer) mapStatistic.get(RESPONSE_TIME),
+                (Integer) mapStatistic.get(VM_CPU),
                 (Double) mapStatistic.get(VM_CPU_LOAD),
-                (Double) mapStatistic.get(VM_RAM_LOAD));
+                (Integer) mapStatistic.get(VM_RAM),
+                (Double) mapStatistic.get(VM_RAM_LOAD),
+                (Integer) mapStatistic.get(REQUESTS));
     }
 }
