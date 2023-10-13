@@ -68,9 +68,11 @@ public class SchedulerService {
                     Price price = priceClient.getMax(ResourceType.DB);
                     resourceService.add(price);
                 }
-                for (int i = 0; i < countMin; i++) {
-                    Price price = priceClient.getMin(ResourceType.DB);
-                    resourceService.add(price);
+                if (resources.size() < 80) {
+                    for (int i = 0; i < countMin; i++) {
+                        Price price = priceClient.getMin(ResourceType.DB);
+                        resourceService.add(price);
+                    }
                 }
             } else {
                 int count = dbRam - optimalDb;
@@ -121,9 +123,11 @@ public class SchedulerService {
                     Price price = priceClient.getMax(ResourceType.VM);
                     resourceService.add(price);
                 }
-                for (int i = 0; i < countMin; i++) {
-                    Price price = priceClient.getMin(ResourceType.VM);
-                    resourceService.add(price);
+                if (resources.size() < 80) {
+                    for (int i = 0; i < countMin; i++) {
+                        Price price = priceClient.getMin(ResourceType.VM);
+                        resourceService.add(price);
+                    }
                 }
             } else {
                 int count = vmRam - optimalVm;
