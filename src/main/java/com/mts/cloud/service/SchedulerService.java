@@ -21,9 +21,9 @@ import java.util.concurrent.TimeUnit;
 public class SchedulerService {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulerService.class);
-    public static final int OPTIMAL_LOAD = 80;
-    public static final int MIN_OPTIMAL_LOAD = 75;
-    public static final int MAX_OPTIMAL_LOAD = 85;
+    public static final int OPTIMAL_LOAD = 65;
+    public static final int MIN_OPTIMAL_LOAD = 60;
+    public static final int MAX_OPTIMAL_LOAD = 70;
 
     @Autowired
     public StatisticClient statisticClient;
@@ -58,7 +58,7 @@ public class SchedulerService {
             resourceService.add(price);
             return;
         }
-        if (dbRamLoad > 90 || dbCpuLoad > 90) {
+        if (dbRamLoad > 80 || dbCpuLoad > 80) {
             Price price = priceService.getMaxDb();
             resourceService.add(price);
             return;
@@ -100,7 +100,7 @@ public class SchedulerService {
             resourceService.add(price);
             return;
         }
-        if (vmRamLoad > 90 || vmCpuLoad > 90) {
+        if (vmRamLoad > 80 || vmCpuLoad > 80) {
             Price price = priceService.getMaxVm();
             resourceService.add(price);
             return;

@@ -38,9 +38,6 @@ public class PriceClient implements InitializingBean {
         List<Price> listDb = new ArrayList<>(this.prices.get(ResourceType.DB).stream()
                 .filter(price -> price.cpu() == price.ram())
                 .toList());
-        this.prices.get(ResourceType.DB).stream()
-                .filter(price -> price.cpu() == 1 && price.ram() == 2)
-                .findFirst().ifPresent(listDb::add);
         this.prices.put(ResourceType.DB, listDb);
 
         List<Price> listVm = this.prices.get(ResourceType.VM).stream()

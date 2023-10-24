@@ -53,7 +53,7 @@ public class PriceService {
 
     public Price getMaxVm() {
         return priceClient.prices.get(ResourceType.VM).stream()
-                .filter(price -> price.ram() == 8 && price.cpu() == 8)
+                .filter(price -> price.ram() == 8 && price.cpu() == 4)
                 .findFirst()
                 .get();
     }
