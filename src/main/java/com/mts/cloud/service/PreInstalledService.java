@@ -25,15 +25,15 @@ public class PreInstalledService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        List<GetResource> resources = resourceService.get();
-        resources.forEach(resource -> resourceService.delete(resource.id()));
-
-        int minVm = applicationProperties.minVm();
-        Price priceVm = priceClient.getMax(ResourceType.VM);
-        IntStream.range(0, minVm).forEach(value -> resourceService.add(priceVm));
-
-        int minDb = applicationProperties.minDb();
-        Price priceDb = priceClient.getMax(ResourceType.DB);
-        IntStream.range(0, minDb).forEach(value -> resourceService.add(priceDb));
+//        List<GetResource> resources = resourceService.get();
+//        resources.forEach(resource -> resourceService.delete(resource.id()));
+//
+//        int minVm = applicationProperties.minVm();
+//        Price priceVm = priceClient.getMax(ResourceType.VM);
+//        IntStream.range(0, minVm).forEach(value -> resourceService.add(priceVm));
+//
+//        int minDb = applicationProperties.minDb();
+//        Price priceDb = priceClient.getMax(ResourceType.DB);
+//        IntStream.range(0, minDb).forEach(value -> resourceService.add(priceDb));
     }
 }

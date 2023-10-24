@@ -2,7 +2,7 @@ package com.mts.cloud.service;
 
 import com.mts.cloud.configuration.ResourceType;
 import com.mts.cloud.service.price.Price;
-import com.mts.cloud.service.price.PriceClient;
+import com.mts.cloud.service.price.PriceService;
 import com.mts.cloud.service.resource.GetResource;
 import com.mts.cloud.service.resource.ResourceService;
 import com.mts.cloud.service.statistic.Statistic;
@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -29,7 +30,7 @@ public class SchedulerService {
     @Autowired
     public ResourceService resourceService;
     @Autowired
-    public PriceClient priceClient;
+    public PriceService priceService;
 
     @Scheduled(fixedDelay = 60, timeUnit = TimeUnit.SECONDS, initialDelay = 0)
     public void task() {
@@ -53,47 +54,29 @@ public class SchedulerService {
             return;
         }
         if (listDb.isEmpty()) {
-            Price price = priceClient.getMax(ResourceType.DB);
+            Price price = priceService.getMaxDb();
             resourceService.add(price);
             return;
         }
         if (dbRamLoad > 90 || dbCpuLoad > 90) {
-            Price price = priceClient.getMax(ResourceType.DB);
+            Price price = priceService.getMaxDb();
             resourceService.add(price);
             return;
         }
         if ((dbRamLoad < MIN_OPTIMAL_LOAD || dbRamLoad > MAX_OPTIMAL_LOAD) && dbRamLoad != 0) {
             int dbRam = listDb.stream().mapToInt(GetResource::ram).sum();
             if (dbRam < optimalDb) {
-                int count = optimalDb - dbRam;
-                int countMax = count / 10;
-                int countMin = count % 10;
-                for (int i = 0; i < countMax; i++) {
-                    Price price = priceClient.getMax(ResourceType.DB);
-                    resourceService.add(price);
-                }
-                if (resources.size() < 80) {
-                    for (int i = 0; i < countMin; i++) {
-                        Price price = priceClient.getMin(ResourceType.DB);
-                        resourceService.add(price);
-                    }
+                Price pricesForDb = priceService.getPricesForDb(optimalDb, dbRam);
+                if (pricesForDb != null) {
+                    resourceService.add(pricesForDb);
                 }
             } else {
                 int count = dbRam - optimalDb;
-                int countMax = count / 10;
-                int countMin = count % 10;
-                Price priceMin = priceClient.getMin(ResourceType.DB);
-                List<GetResource> dbMaxResourceList = listDb.stream()
-                        .filter(getResource -> getResource.ram() == 10)
-                        .limit(countMax)
-                        .toList();
-                dbMaxResourceList.forEach(getResource -> resourceService.update(getResource.id(), priceMin));
-                if (listDb.size() != 1) {
-                    List<GetResource> dbMinResourceList = listDb.stream()
-                            .filter(getResource -> getResource.ram() == 1)
-                            .limit(countMin)
-                            .toList();
-                    dbMinResourceList.forEach(getResource -> resourceService.delete(getResource.id()));
+                if (listDb.size() > 1) {
+                    listDb.stream()
+                            .filter(getResource -> getResource.ram() <= count)
+                            .max(Comparator.comparingInt(GetResource::ram))
+                            .ifPresent(resource -> resourceService.delete(resource.id()));
                 }
             }
         }
@@ -113,47 +96,29 @@ public class SchedulerService {
             return;
         }
         if (listVm.isEmpty()) {
-            Price price = priceClient.getMax(ResourceType.VM);
+            Price price = priceService.getMaxVm();
             resourceService.add(price);
             return;
         }
         if (vmRamLoad > 90 || vmCpuLoad > 90) {
-            Price price = priceClient.getMax(ResourceType.VM);
+            Price price = priceService.getMaxVm();
             resourceService.add(price);
             return;
         }
         if ((vmRamLoad < MIN_OPTIMAL_LOAD || vmRamLoad > MAX_OPTIMAL_LOAD) && vmRamLoad != 0) {
             int vmRam = listVm.stream().mapToInt(GetResource::ram).sum();
             if (vmRam < optimalVm) {
-                int count = optimalVm - vmRam;
-                int countMax = count / 10;
-                int countMin = count % 10;
-                for (int i = 0; i < countMax; i++) {
-                    Price price = priceClient.getMax(ResourceType.VM);
-                    resourceService.add(price);
-                }
-                if (resources.size() < 80) {
-                    for (int i = 0; i < countMin; i++) {
-                        Price price = priceClient.getMin(ResourceType.VM);
-                        resourceService.add(price);
-                    }
+                Price pricesForVm = priceService.getPricesForVm(optimalVm, vmRam);
+                if (pricesForVm != null) {
+                    resourceService.add(pricesForVm);
                 }
             } else {
                 int count = vmRam - optimalVm;
-                int countMax = count / 10;
-                int countMin = count % 10;
-                Price priceMin = priceClient.getMin(ResourceType.VM);
-                List<GetResource> vmMaxResourceList = listVm.stream()
-                        .filter(getResource -> getResource.ram() == 10)
-                        .limit(countMax)
-                        .toList();
-                vmMaxResourceList.forEach(getResource -> resourceService.update(getResource.id(), priceMin));
-                if (listVm.size() != 1) {
-                    List<GetResource> vmMinResourceList = listVm.stream()
-                            .filter(getResource -> getResource.ram() == 1)
-                            .limit(countMin)
-                            .toList();
-                    vmMinResourceList.forEach(getResource -> resourceService.delete(getResource.id()));
+                if (listVm.size() > 1) {
+                    listVm.stream()
+                            .filter(getResource -> getResource.ram() <= count)
+                            .max(Comparator.comparingInt(GetResource::ram))
+                            .ifPresent(resource -> resourceService.delete(resource.id()));
                 }
             }
         }

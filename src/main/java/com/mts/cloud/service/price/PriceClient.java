@@ -35,36 +35,23 @@ public class PriceClient implements InitializingBean {
         }
         this.prices = Arrays.stream(prices)
                 .collect(Collectors.groupingBy(Price::type));
+        List<Price> listDb = new ArrayList<>(this.prices.get(ResourceType.DB).stream()
+                .filter(price -> price.cpu() == price.ram())
+                .toList());
+        this.prices.get(ResourceType.DB).stream()
+                .filter(price -> price.cpu() == 1 && price.ram() == 2)
+                .findFirst().ifPresent(listDb::add);
+        this.prices.put(ResourceType.DB, listDb);
+
+        List<Price> listVm = this.prices.get(ResourceType.VM).stream()
+                .filter(price -> price.ram() / price.cpu() == 2)
+                .toList();
+        this.prices.put(ResourceType.VM, listVm);
     }
 
-    public Price getMin(ResourceType type) {
-        return switch (type) {
-            case DB -> minDb;
-            case VM -> minVm;
-        };
-    }
-
-    public Price getMax(ResourceType type) {
-        return switch (type) {
-            case DB -> maxDb;
-            case VM -> maxVm;
-        };
-    }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         getPrices();
-        this.minDb = prices.get(ResourceType.DB).stream()
-                .min(Comparator.comparingInt(Price::cpu))
-                .get();
-        this.minVm = prices.get(ResourceType.VM).stream()
-                .min(Comparator.comparingInt(Price::cpu))
-                .get();
-        this.maxDb = prices.get(ResourceType.DB).stream()
-                .max(Comparator.comparingInt(Price::cpu))
-                .get();
-        this.maxVm = prices.get(ResourceType.VM).stream()
-                .max(Comparator.comparingInt(Price::cpu))
-                .get();
     }
 }
