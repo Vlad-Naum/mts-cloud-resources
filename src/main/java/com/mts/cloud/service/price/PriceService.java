@@ -19,7 +19,7 @@ public class PriceService {
                     res = price;
                     continue;
                 }
-                if (price.ram() > count) {
+                if (price.ram() < res.ram()) {
                     res = price;
                 }
             }
@@ -36,7 +36,7 @@ public class PriceService {
                     res = price;
                     continue;
                 }
-                if (price.ram() > count) {
+                if (price.ram() < res.ram()) {
                     res = price;
                 }
             }
